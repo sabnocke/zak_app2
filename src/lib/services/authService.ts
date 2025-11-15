@@ -1,0 +1,69 @@
+import { auth, provider } from '$lib/firebase.ts';
+import { GoogleAuthProvider, signInWithPopup, type AuthError, signOut } from 'firebase/auth';
+import { state } from '$lib/stores.svelte.ts';
+import type { AuthState } from '$lib/types.ts';
+
+export interface ErrorResult {
+	message: string;
+	code: string;
+	email: string;
+}
+
+export interface SuccessResult {
+	state: AuthState;
+	token: string | null;	//? I might need it
+}
+
+export interface Result {
+	isSuccess: boolean;
+	error: ErrorResult;
+	success: SuccessResult;
+}
+
+export const DEFAULT_AUTH_RESULT: Result = {
+	isSuccess: false,
+	error: {message: "", code: "", email: ""},
+	success: {state, token: null},
+}
+
+//? potential Either<> here
+export function handleSignIn(): Result {
+
+	const out: Result = DEFAULT_AUTH_RESULT;
+	signInWithPopup(auth, provider).then((result) => {
+		// This gives you a Google Access Token. You can use it to access the Google API.
+		const credential = GoogleAuthProvider.credentialFromResult(result);
+		const token = credential?.accessToken || null;
+
+		// The signed-in user info.
+		const user = result.user;
+
+		out.isSuccess = true;
+		state.user = user;
+		out.success = {state, token};
+
+	}).catch((error: AuthError) => {
+		const code = error.code;
+		const message = error.message;
+		const email = error.customData.email || "";
+
+		out.isSuccess = false;
+		out.error = { message, code, email }
+	});
+
+	return out;
+}
+
+export function handleSignOut(): boolean {
+	let out = false;
+
+	signOut(auth).then(() => {
+		out = true;
+	}).catch((error: AuthError) => {
+		out = false;
+		console.error(error);
+		//TODO do something with the error
+	})
+
+	return out;
+}
