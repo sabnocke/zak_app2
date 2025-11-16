@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createJob } from '$lib/services/jobService'; //TODO
-	import {state} from '$lib/stores.svelte.ts';
+	import {authState} from '$lib/stores.svelte.ts';
 	import BriefcaseIcon from '$lib/components/Icons/BriefcaseIcon.svelte';
 
 	let jobName = "";
@@ -12,7 +12,7 @@
 	async function submit() {
 		error = null;
 
-		if (!state.isAuthenticated) return;
+		if (!authState.isAuthenticated) return;
 
 		const valueNum = parseFloat(jobValue);
 		const rateNum = parseFloat(hourlyRate);
@@ -24,7 +24,7 @@
 		}
 
 		try {
-			createJob({ jobName, jobValue, materialCost, hourlyRate }, state.user.uid);
+			createJob({ jobName, jobValue, materialCost, hourlyRate }, authState.user.uid);
 			jobName = '';
 			jobValue = '';
 			hourlyRate = '450';

@@ -8,7 +8,7 @@ import {WorkLog} from "$lib/class/WorkLog"
 
 //TODO might switch it to runes
 
-export const state: AuthState = $state<AuthState>(DEFAULT_AUTH_STATE);
+export const authState: AuthState = $state<AuthState>(DEFAULT_AUTH_STATE);
 // export const user = $derived(state.user);
 
 

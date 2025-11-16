@@ -1,7 +1,7 @@
 <script lang="ts">
 	import {
 		// user,
-		state,
+		authState,
 		jobs,
 		employees,
 		activeWork,
@@ -13,27 +13,36 @@
 	import { handleSignIn, handleSignOut } from '$lib/services/authService'; //TODO
 	import JobForm from '$lib/components/JobForm.svelte';
 	import BarChart from '$lib/components/BarChart.svelte';
-	// import {GoogleIcon} from ... //TODO
-	// import {onMount} from 'svelte';
-	// import {firebase} from "$lib/firebase"
 	import { TimeUpdate } from '$lib/TimeUpdate.ts';
 	import { deepCopy } from '$lib/utils.ts';
 	// import type {ChartData} from '$lib/types.ts';
 	import GoogleIcon from '$lib/components/Icons/GoogleIcon.svelte';
 	import UserIcon from '$lib/components/Icons/UserIcon.svelte';
+	import {getWorkers} from '$lib/services/transporterService.ts';
+	import ClockIcon from '$lib/components/Icons/ClockIcon.svelte';
+	import Header from '$lib/components/Header.svelte';
 
-	let currentTime = new Date();
-	let signInError: string | null = null;
-	let selectedJobId: string | null = null;
-	let isLoading = $derived(state.isLoading);
+	import Buttons from '$lib/components/Buttons.svelte';
+	import FormOrderCreate from '$lib/components/FormOrderCreate.svelte';
+	import WorkDisplay from '$lib/components/WorkDisplay.svelte';
+	import WorkerDisplay from '$lib/components/WorkerDisplay.svelte';
 
-	const timeUpdate = new TimeUpdate(state.user.uid, jobs, employees, activeWork, workLog, pauseLog, dailyLog);
+	let currentTime = $state(new Date());
+	let signInError: string | null = $state(null);
+	let selectedJobId: string | null = $state(null);
+	let isLoading = $derived(false);
+
+	getWorkers().then(() => {
+		console.log("success");
+	})
+
+	const timeUpdate = new TimeUpdate(authState.user.uid, jobs, employees, activeWork, workLog, pauseLog, dailyLog);
 
 	$effect(() => {
 		const interval = setInterval(async () => {
 			currentTime = new Date();
 
-			if (state.user && Object.keys(activeWork).length > 0) {
+			if (authState.user && Object.keys(activeWork).length > 0) {
 				timeUpdate.update();
 			}
 		}, 1000);
@@ -48,7 +57,7 @@
 	})));
 
 	async function handleEmployeeToggle(employeeId: string) {
-		if (!state.isAuthenticated || !selectedJobId) return;
+		if (!authState.isAuthenticated || !selectedJobId) return;
 
 		const newActiveWork = deepCopy(activeWork);
 		const isWorkingOnSelectedJob = newActiveWork[selectedJobId]?.includes(employeeId);
@@ -72,91 +81,98 @@
 </script>
 
 
-{#if isLoading}
-	<!-- Třídy pro loading screen -->
-	<div class="app-screen loading-screen">Načítání...</div>
-{:else if !state.isAuthenticated}
-	<!-- Třídy pro přihlašovací obrazovku -->
-	<div class="app-screen">
-		<div class="auth-card">
-			<h1 class="auth-card__title">Systém pro Sledování Zakázek</h1>
-			<p class="auth-card__text">Pro pokračování se prosím přihlaste.</p>
-			<button onclick={sign} class="btn-google">
-				<GoogleIcon />
-				<span>Přihlásit se pomocí Google</span>
-			</button>
-			{#if signInError}
-				<p class="auth-card__error">{signInError}</p>
-			{/if}
-		</div>
-	</div>
-{:else}
-	<!-- Třídy pro hlavní Dashboard -->
-	<div class="app-container">
-		<header class="header">
-			<h1 class="header__title">Vítejte, {state.user.displayName ?? "EXCEPTION: Missing name"}!</h1>
-			<p class="header__clock">{currentTime.toLocaleTimeString()}</p>
-			<button onclick={handleSignOut} class="btn-signout">Odhlásit se</button>
-		</header>
-
-		<main class="main-grid">
-			<!-- Sloupec 1: Formulář pro zakázky -->
-			<div>
-				<JobForm />
-			</div>
-
-			<!-- Sloupec 2: Seznam aktivních zakázek -->
-			<div class="main-grid-col-2">
-				<h2 class="section-title">Aktivní Zakázky</h2>
-				<div class="job-list">
-					{#each jobs as job (job.id)}
-						<div
-							class="job-card"
-							class:is-selected={selectedJobId === job.id}
-							onclick={() => selectedJobId = job.id}
-						>
-							<h3 class="job-card__title">{job.name}</h3>
-							<p class="job-card__remaining">Zbývá: {job.remainingHours.toFixed(1)} h / {job.totalHours.toFixed(1)}
-								h</p>
-							<p class="job-card__workers">
-								Pracují: {activeWork[job.id]?.map(id => employees.find(e => e.id === id)?.name).join(', ') || 'Nikdo'}</p>
-						</div>
-					{/each}
+<div class="outer-shell">
+	<div class="inner-shell">
+		{#if isLoading}
+			<!-- Třídy pro loading screen -->
+			<div class="app-screen loading-screen">Načítání...</div>
+		{:else if !authState.isAuthenticated}
+			<!-- Třídy pro přihlašovací obrazovku -->
+			<div class="app-screen">
+				<div class="auth-card">
+					<h1 class="auth-card__title">Systém pro Sledování Zakázek</h1>
+					<p class="auth-card__text">Pro pokračování se prosím přihlaste.</p>
+					<button onclick={sign} class="btn-google">
+						<GoogleIcon />
+						<span>Přihlásit se pomocí Google</span>
+					</button>
+					{#if signInError}
+						<p class="auth-card__error">{signInError}</p>
+					{/if}
 				</div>
 			</div>
+		{:else}
+			<!-- Třídy pro hlavní Dashboard -->
+			<div class="app-container">
+				<Header />
 
-			<!-- Sloupec 3 (přes celou šířku): Zaměstnanci a Evidence -->
-			<div class="main-grid-col-3">
-				<h2>Zaměstnanci a Evidence</h2>
-				<div class="employee-grid">
-					{#each employees as employee (employee.id)}
-						{@const isActive = activeWork[selectedJobId || ""]?.includes(employee.id)}
-						<button
-							onclick={() => handleEmployeeToggle(employee.id)}
-							disabled={!selectedJobId}
-							class:is-active={isActive}
-							class="btn-employee"
-						>
-							<UserIcon />
-							<span class="">{employee.name}</span>
-							<span class="employee-status">{isActive ? 'Aktivní' : 'Mimo'}</span>
-						</button>
-					{/each}
-				</div>
+				<main class="main-grid">
+					<Buttons />
+					<!-- Sloupec 1: Formulář pro zakázky -->
+					<FormOrderCreate />
+<!--					<div>-->
+<!--						<JobForm />-->
+<!--					</div>-->
+
+					<div class="subgrid">
+						<WorkDisplay />
+						<WorkerDisplay />
+					</div>
+
+<!--					&lt;!&ndash; Sloupec 2: Seznam aktivních zakázek &ndash;&gt;-->
+<!--					<div class="main-grid-col-2">-->
+<!--						<h2 class="section-title">Aktivní Zakázky</h2>-->
+<!--						<div class="job-list">-->
+<!--							{#each jobs as job (job.id)}-->
+<!--								<div-->
+<!--									class="job-card"-->
+<!--									class:is-selected={selectedJobId === job.id}-->
+<!--									onclick={() => selectedJobId = job.id}-->
+<!--								>-->
+<!--									<h3 class="job-card__title">{job.name}</h3>-->
+<!--									<p class="job-card__remaining">Zbývá: {job.remainingHours.toFixed(1)} h / {job.totalHours.toFixed(1)}-->
+<!--										h</p>-->
+<!--									<p class="job-card__workers">-->
+<!--										Pracují: {activeWork[job.id]?.map(id => employees.find(e => e.id === id)?.name).join(', ') || 'Nikdo'}</p>-->
+<!--								</div>-->
+<!--							{/each}-->
+<!--						</div>-->
+<!--					</div>-->
+
+<!--					&lt;!&ndash; Sloupec 3 (přes celou šířku): Zaměstnanci a Evidence &ndash;&gt;-->
+<!--					<div class="main-grid-col-3">-->
+<!--						<h2>Zaměstnanci a Evidence</h2>-->
+<!--						<div class="employee-grid">-->
+<!--							{#each employees as employee (employee.id)}-->
+<!--								{@const isActive = activeWork[selectedJobId || ""]?.includes(employee.id)}-->
+<!--								<button-->
+<!--									onclick={() => handleEmployeeToggle(employee.id)}-->
+<!--									disabled={!selectedJobId}-->
+<!--									class:is-active={isActive}-->
+<!--									class="btn-employee"-->
+<!--								>-->
+<!--									<UserIcon />-->
+<!--									<span class="">{employee.name}</span>-->
+<!--									<span class="employee-status">{isActive ? 'Aktivní' : 'Mimo'}</span>-->
+<!--								</button>-->
+<!--							{/each}-->
+<!--						</div>-->
+<!--					</div>-->
+
+					<!-- Sloupec 3 (přes celou šířku): Graf -->
+					<div class="main-grid-col-3">
+						<BarChart data={chartData} title="Odpracované Hodiny na Zakázkách" unit="h" />
+					</div>
+
+				</main>
 			</div>
-
-			<!-- Sloupec 3 (přes celou šířku): Graf -->
-			<div class="main-grid-col-3">
-				<BarChart data={chartData} title="Odpracované Hodiny na Zakázkách" unit="h" />
-			</div>
-
-		</main>
+		{/if}c
 	</div>
-
-{/if}
+</div>
 
 
 <style lang="scss">
+  @use "sass:color";
 
   $bg-brand-background: #1f2937 !default;
   $bg-brand-surface: #374151;
@@ -228,12 +244,50 @@
     color: white;
   }
 
+  $brand-background: #0D1117; // Example: A dark background color
+  $brand-text-primary: #C9D1D9;
+
+	body {
+		margin: 0;
+		line-height: inherit;
+	}
+
+	.outer-shell {
+		background-color: $brand-background;
+		color: $brand-text-primary;
+	}
+
+	.inner-shell {
+		box-sizing: border-box;
+		border-width: 0;
+		border-style: solid;
+		border-color: #e5e7eb;
+	}
+
+  $spacing-4: 1rem;
+  $spacing-6: 1.5rem;
+  $spacing-8: 2rem;
+  $sm-breakpoint: 640px;
+  $lg-breakpoint: 1024px;
+
   .app-screen {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    width: 100vw;
+    min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start;
+
+		font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+		padding: $spacing-4;
+
+		@media (min-width: $sm-breakpoint) {
+			padding: $spacing-6;
+    }
+
+		@media (min-width: $lg-breakpoint) {
+			padding: $spacing-8;
+    }
   }
 
   .app-container {
@@ -301,35 +355,6 @@
   /* 3. HLAVNÍ DASHBOARD */
   /* -------------------------------------- */
 
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-
-    &__title {
-      font-size: 1.5rem;
-      font-weight: bold;
-    }
-
-    &__clock {
-      color: #9ca3af;
-    }
-  }
-
-  .btn-signout {
-    background-color: #dc2626;
-    color: white;
-    font-weight: bold;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease-in-out;
-
-    &:hover {
-      background-color: #b91c1c;
-    }
-  }
-
   .section-title {
     font-size: 1.25rem;
     font-weight: bold;
@@ -342,16 +367,58 @@
   }
 
 
+  $brand-surface: #4318FF;
+
+
+
+  $spacing-8: 2rem;
+  $spacing-6: 1.5rem;
+  $gray-700: rgb(55, 65, 81);
+  $rounded-xl: 0.75rem;
+  $max-w-7xl: 80rem;
+  $blur-sm: 4px;
+
   /* Mřížka hlavního obsahu */
   .main-grid {
-    display: grid;
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: 1.5rem;
+    width: 100%;
+		max-width: 80rem;
+		margin-bottom: 2rem;
 
-    @media (min-width: 768px) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+		background-color: color.adjust(#4318FF, $alpha: -50%);
+		backdrop-filter: blur(4px);
+
+    border-radius: $rounded-xl;
+    border-width: 1px;
+    border-style: solid;
+    border-color: $gray-700;
+
+		padding: $spacing-6;
+
+		box-shadow: 0 0 black, 0 0 black, 0 25px 50px -12px #00000040;
+
+		animation: slide-in 0.5s ease-out forwards;
+
+		@media(min-width: 640px) {
+			padding: 2rem;
+		}
   }
+
+	.subgrid {
+		width: 100%;
+		max-width: 80rem;
+		margin-top: 1rem;
+		margin-left: auto;
+		margin-right: auto;
+
+		display: grid;
+		grid-template-columns: repeat(1, 1fr);
+
+		gap: 2rem;
+
+		@media (min-width: 1024px) {
+			grid-template-columns: repeat(2, 1fr);
+    }
+	}
 
   .main-grid-col-2 {
     @media (min-width: 768px) {

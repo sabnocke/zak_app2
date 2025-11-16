@@ -1,5 +1,6 @@
 import type { WorkTypeLog } from '$lib/types.ts';
 import {Unreachable} from '$lib/utils.ts';
+import {employees} from '$lib/stores.svelte.ts';
 
 interface IEmployee {
 	id: string;
@@ -27,6 +28,10 @@ export class Employee implements IEmployee {
 		this.hourlyWage = hourlyWage;
 		this.annualLeaveEntitlement = annualLeaveEntitlement;
 		this.onPause = false;
+	}
+
+	public static new(name: string) {
+		return new Employee(`${employees.length}_${name}`, name, 0, 0);
 	}
 
 	public get type(): "pause" | "work" {

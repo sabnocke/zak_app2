@@ -1,6 +1,6 @@
 import { auth, provider } from '$lib/firebase.ts';
 import { GoogleAuthProvider, signInWithPopup, type AuthError, signOut } from 'firebase/auth';
-import { state } from '$lib/stores.svelte.ts';
+import { authState } from '$lib/stores.svelte.ts';
 import type { AuthState } from '$lib/types.ts';
 
 export interface ErrorResult {
@@ -23,7 +23,7 @@ export interface Result {
 export const DEFAULT_AUTH_RESULT: Result = {
 	isSuccess: false,
 	error: {message: "", code: "", email: ""},
-	success: {state, token: null},
+	success: { state: authState, token: null},
 }
 
 //? potential Either<> here
@@ -39,13 +39,19 @@ export function handleSignIn(): Result {
 		const user = result.user;
 
 		out.isSuccess = true;
-		state.user = user;
-		out.success = {state, token};
+		authState.user = user;
+		authState.isAuthenticated = true;
+		authState.isLoading = false;
+		out.success = { state: authState, token};
+
+		console.log(authState);
 
 	}).catch((error: AuthError) => {
 		const code = error.code;
 		const message = error.message;
 		const email = error.customData.email || "";
+
+		console.error(email, message);
 
 		out.isSuccess = false;
 		out.error = { message, code, email }
@@ -59,6 +65,7 @@ export function handleSignOut(): boolean {
 
 	signOut(auth).then(() => {
 		out = true;
+		authState.isAuthenticated = false;
 	}).catch((error: AuthError) => {
 		out = false;
 		console.error(error);

@@ -29,6 +29,14 @@ export interface Employee {
     annualLeaveEntitlement: number;
 }
 
+export const DEFAULT_EMPLOYEE: Employee = {
+	id : "",
+	name: "~~MISSING~~",
+	hourlyWage: 0,
+	onPause: false,
+	annualLeaveEntitlement: 0,
+}
+
 export interface UserData {
     uid: string;
     email: string | null;
@@ -127,4 +135,8 @@ export const DEFAULT_AUTH_STATE: AuthState = {
 	isLoading: true,
 	isAuthenticated: false,
 	user: DEFAULT_USER,
+}
+
+export interface WorkerInformation {
+	name: string;
 }
