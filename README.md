@@ -49,5 +49,8 @@ npm run build
 - [ ] `add cursor: pointer to respective buttons`
 - [ ] `switch BarChart for heatmap/graph`
 - [ ] `figure out sending data to db`
-- [ ] 
 
+- - -
+
+- [Anychart heatmap](https://www.freecodecamp.org/news/interactive-heatmap-in-javascript/)
+- [D3.js heatmap](https://d3-graph-gallery.com/graph/heatmap_style.html)
