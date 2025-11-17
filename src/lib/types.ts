@@ -1,60 +1,62 @@
-import { Timestamp } from "firebase/firestore";
-import { DailyLog } from "$lib/class/DailyLog"
-import type {User} from "firebase/auth"
+import { Timestamp } from 'firebase/firestore';
+import { DailyLog } from '$lib/class/DailyLog';
+import type { User } from 'firebase/auth';
+import { SvelteSet } from 'svelte/reactivity';
+import { RefFile } from '$lib/class/SmallClasses.ts';
 
 export interface Document {
-    name: string;
-    content: string;
-    type: string;
+	name: string;
+	content: string;
+	type: string;
 }
 
 export interface Job {
-    id: string
-    name: string;
-    totalValue: number;
-    materialCost: number;
-    hourlyRate: number;
-    totalHours: number;
-    remainingHours: number;
-    publicDocuments: Document[]
-    privateDocuments: Document[]
-    archivedAt: Timestamp | null;
+	id: string;
+	name: string;
+	totalValue: number;
+	materialCost: number;
+	hourlyRate: number;
+	totalHours: number;
+	remainingHours: number;
+	publicDocuments: Document[];
+	privateDocuments: Document[];
+	archivedAt: Timestamp | null;
 }
 
 export interface Employee {
-    id: string;
-    name: string;
-    hourlyWage: number;
-    onPause: boolean;
-    annualLeaveEntitlement: number;
+	id: string;
+	name: string;
+	hourlyWage: number;
+	onPause: boolean;
+	annualLeaveEntitlement: number;
 }
 
 export const DEFAULT_EMPLOYEE: Employee = {
-	id : "",
-	name: "~~MISSING~~",
+	id: '',
+	name: '~~MISSING~~',
 	hourlyWage: 0,
 	onPause: false,
-	annualLeaveEntitlement: 0,
-}
+	annualLeaveEntitlement: 0
+};
 
 export interface UserData {
-    uid: string;
-    email: string | null;
-    displayName: string | null;
-    lastLogin: Timestamp;
+	uid: string;
+	email: string | null;
+	displayName: string | null;
+	lastLogin: Timestamp;
 }
 
 export interface WorkLog {
-    entry: Map<string, Map<string, number>>;
+	entry: Map<string, Map<string, number>>;
 }
 
 export interface WorkTypeLog {
-    entry: Record<string, number>;
+	entry: Record<string, number>;
 }
 
 export interface DailyEmployeeLog {
-    work: WorkTypeLog;
-    pause: WorkTypeLog;
+	work: WorkTypeLog;
+	pause: WorkTypeLog;
 }
 
 // export interface DailyLog {
@@ -66,31 +68,31 @@ export interface DailyLogStore {
 }
 
 export interface Leave {
-    id: string;
-    employeeId: string;
-    type: "vacation" | "sick";
-    startDate: Timestamp;
-    endDate: Timestamp;
+	id: string;
+	employeeId: string;
+	type: 'vacation' | 'sick';
+	startDate: Timestamp;
+	endDate: Timestamp;
 }
 
 export interface PayrollRecord {
-    employeeId: string;
-    employeeName: string;
-    totalHours: number;
-    hourlyWage: number;
-    autoBonus: number;
-    manualBonus: number;
-    totalSalary: number;
-    annualLeaveEntitlement: number;
-    remainingLeave: number;
+	employeeId: string;
+	employeeName: string;
+	totalHours: number;
+	hourlyWage: number;
+	autoBonus: number;
+	manualBonus: number;
+	totalSalary: number;
+	annualLeaveEntitlement: number;
+	remainingLeave: number;
 }
 
 export interface PayrollPeriod {
-    id: string;
-    endDate: string; // not sure about this
-    totalHours: number;
-    totalWages: number;
-    records: PayrollRecord[];
+	id: string;
+	endDate: string; // not sure about this
+	totalHours: number;
+	totalWages: number;
+	records: PayrollRecord[];
 }
 
 export interface BarChartProps {
@@ -106,12 +108,13 @@ export interface ChartData {
 	second: number | null;
 }
 
-export type StackedUnit = {label: string, work: number, pause: number};
-export type UnStackedData = {label: string, value: number}[];
+export type StackedUnit = { label: string; work: number; pause: number };
+export type UnStackedData = { label: string; value: number }[];
 export type StackedData = StackedUnit[];
 export type ActiveWorkMap = Record<string, string[]>; // {[jobId]: [employeeId, ...]}
+export type FileStore = SvelteSet<RefFile>;
 
-export interface AuthUser extends Pick<User, "uid" | "email" | "displayName" | "photoURL"> {
+export interface AuthUser extends Pick<User, 'uid' | 'email' | 'displayName' | 'photoURL'> {
 	uid: string;
 	email: string;
 	displayName: string;
@@ -125,17 +128,17 @@ export interface AuthState {
 }
 
 export const DEFAULT_USER: AuthUser = {
-	uid: "",
-	email: "",
-	displayName: "!__DEFAULT__!",
-	photoURL: "",
-}
+	uid: '',
+	email: '',
+	displayName: '!__DEFAULT__!',
+	photoURL: ''
+};
 
 export const DEFAULT_AUTH_STATE: AuthState = {
 	isLoading: true,
 	isAuthenticated: false,
-	user: DEFAULT_USER,
-}
+	user: DEFAULT_USER
+};
 
 export interface WorkerInformation {
 	name: string;

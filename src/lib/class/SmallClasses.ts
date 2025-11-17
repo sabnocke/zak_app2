@@ -1,6 +1,7 @@
 import type { WorkTypeLog } from '$lib/types.ts';
 import {Unreachable} from '$lib/utils.ts';
 import {employees} from '$lib/stores.svelte.ts';
+import * as crypto from 'node:crypto';
 
 interface IEmployee {
 	id: string;
@@ -52,5 +53,15 @@ export class DailyEmployeeLog implements IDailyEmployeeLog {
 		if (name === "work") return this.work;
 		if (name === "pause") return this.pause;
 		throw new Unreachable();
+	}
+}
+
+export class RefFile {
+	public readonly id: string;
+	public readonly file: File;
+
+	constructor(file: File) {
+		this.file = file;
+		this.id = crypto.randomUUID();
 	}
 }

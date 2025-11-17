@@ -1,31 +1,43 @@
 <script lang="ts">
 
+	import {jobs} from '$lib/stores.svelte.ts';
+	import type { Job } from '$lib/types';
+
+	let name = $state("");
+	let value = $state(0);
+	let materialCost = $state(0);
+	let rate = $state(0);
+
+	function newJob() {
+		const job: Job = {}
+	}
+
 </script>
 
 <form action="" class="space-y-4-parent">
 	<div>
 		<label class="label">
 			Název zakázky
-			<input type="text" class="form-input" />
+			<input type="text" class="form-input" required bind:value={name} />
 		</label>
 	</div>
 	<div class="grid-container">
 		<div>
 			<label class="label">
 				Hodnota zakázky (Kč)
-				<input type="number" class="form-input" placeholder="50 000" />
+				<input type="number" required class="form-input" placeholder="50 000" bind:value={value} />
 			</label>
 		</div>
 		<div>
 			<label class="label">
 				Hodnota materiálu (Kč)
-				<input type="number" class="form-input" placeholder="50 000" />
+				<input type="number" required class="form-input" placeholder="50 000" bind:value={materialCost} />
 			</label>
 		</div>
 		<div>
 			<label class="label">
 				Hodinová sazba (Kč/hod)
-				<input type="number" class="form-input" value="450" />
+				<input type="number" required class="form-input" placeholder="450" bind:value={rate} />
 			</label>
 		</div>
 	</div>

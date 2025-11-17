@@ -1,7 +1,8 @@
-import type { DailyLogStore, Job, Leave, PayrollPeriod, AuthState} from '$lib/types.ts';
+import type { DailyLogStore, Job, Leave, PayrollPeriod, AuthState, FileStore } from '$lib/types.ts';
 import {DEFAULT_AUTH_STATE} from '$lib/types.ts';
-import {Employee} from "$lib/class/SmallClasses"
+import {Employee, RefFile} from "$lib/class/SmallClasses"
 import {WorkLog} from "$lib/class/WorkLog"
+import { SvelteSet } from 'svelte/reactivity';
 
 // import {derived} from 'svelte/store';
 // import {doc, getDoc, onSnapshot} from "firebase/firestore";
@@ -21,7 +22,8 @@ export const pauseLog = $state(new WorkLog());
 export const dailyLog = $state<DailyLogStore>({});
 export const leaveRecords = $state<Leave[]>([]);
 export const payrollHistory = $state<PayrollPeriod[]>([]);
-
+export const publicFiles: FileStore = new SvelteSet<RefFile>();
+export const privateFiles: FileStore = new SvelteSet<RefFile>();
 
 
 
